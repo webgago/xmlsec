@@ -18,46 +18,11 @@ static VALUE xmlsec_sign(VALUE self, xmlDocPtr doc, VALUE key_file, VALUE passwo
 
 
   /* create signature template for RSA-SHA1 enveloped signature */
-  signNode = xmlSecTmplSignatureCreate( doc,
-                                        xmlSecTransformInclC14NWithCommentsId,
-                                        xmlSecTransformRsaSha1Id,
-                                       NULL
-                                      );
+  signNode = xmlSecFindNode(xmlDocGetRootElement(doc), xmlSecNodeSignature, xmlSecDSigNs);
+
   if(signNode == NULL) {
     if(doc != NULL) xmlFreeDoc(doc);
     rb_raise(rb_eRuntimeError, "Error: failed to create signature template\n");
-    return Qnil;
-  }
-
-  pathNode =  xmlDocGetRootElement(doc);
-  if (! NIL_P(node_name)) {
-    pathNode = xmlNewChild(xmlDocGetRootElement(doc), NULL, StringValuePtr(node_name), NULL);
-    if(pathNode == NULL) {
-      if(doc != NULL) xmlFreeDoc(doc);
-      rb_raise(rb_eRuntimeError, "Error: failed to create %s node\n", StringValuePtr(node_name));
-      return Qnil;
-    }
-  }
-
-  /* add <dsig:Signature/> node to the doc */
-  xmlAddChild(pathNode, signNode);
-
-  /* add reference */
-  refNode = xmlSecTmplSignatureAddReference(signNode,
-                                            xmlSecTransformSha1Id,
-                                            NULL,
-                                            "\0",
-                                            NULL);
-  if(refNode == NULL) {
-    if(doc != NULL) xmlFreeDoc(doc);
-    rb_raise(rb_eRuntimeError, "Error: failed to add reference to signature template\n");
-    return Qnil;
-  }
-
-  /* add enveloped transform */
-  if(xmlSecTmplReferenceAddTransform(refNode, xmlSecTransformEnvelopedId) == NULL) {
-    if(doc != NULL) xmlFreeDoc(doc);
-    rb_raise(rb_eRuntimeError, "Error: failed to add enveloped transform to reference\n");
     return Qnil;
   }
 
